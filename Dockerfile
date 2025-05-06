@@ -22,7 +22,7 @@ COPY --from=build /app/target/*.jar app.jar
 ENV JAVA_OPTS="-Xms256m -Xmx512m"
 
 # Expose the application port
-EXPOSE 8080
+EXPOSE 8484
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
