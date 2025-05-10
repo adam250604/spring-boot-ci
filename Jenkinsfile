@@ -1,39 +1,45 @@
 pipeline {
     agent any
-    tools {
-        maven 'Maven'   // Name of Maven tool in Jenkins
-        jdk 'JDK17'     // Name of JDK tool in Jenkins
+
+    environment {
+        SONARQUBE = 'SonarQubeServer' // Replace with your SonarQube server name in Jenkins (Manage Jenkins > Configure)
+        DOCKER_IMAGE = 'spring-boot-ci-image'
     }
+
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                git branch: 'main', 
-                url: 'https://github.com/adam250604/springbootcicd.git'
+                git 'https://github.com/adam250604/spring-boot-ci.git'
             }
         }
-        stage('Build') {
+
+        stage('Build with Maven') {
             steps {
-                sh 'mvn clean package'
+                sh 'mvn clean install'
             }
         }
-        stage('Test') {
-            steps {
-                sh 'mvn test'
-            }
-        }
+
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh 'mvn sonar:sonar'
+                withSonarQubeEnv('SonarQubeServer') {
+                    sh 'mvn sonar:sonar -Dsonar.projectKey=spring-boot-ci -Dsonar.host.url=http://localhost:9000'
                 }
             }
         }
-        stage('Docker Build') {
+
+        stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("adam250604/springboot-app:${env.BUILD_ID}")
-                }
+                sh 'docker build -t spring-boot-ci-image .'
             }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ CI/CD pipeline completed successfully!'
+        }
+        failure {
+            echo '❌ CI/CD pipeline failed.'
         }
     }
 }
